@@ -1,6 +1,6 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import Eos from 'eosjs'; // https://github.com/EOSIO/eosjs
-
+import Instascan from 'instascan';
 // material-ui dependencies
 import { withStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
@@ -11,7 +11,11 @@ import CardContent from '@material-ui/core/CardContent';
 import TextField from '@material-ui/core/TextField';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
-
+import logo from '../for_keeps_logo_720.png';
+import page1 from '../Keep_page1.jpg';
+import page2 from '../Keeps-Page2.jpg';
+import coin from '../Keepcoin.png';
+// import foo from '../lib/demux';
 // NEVER store private keys in any source code in your real life development
 // This is for demo purposes only!
 const accounts = [
@@ -23,6 +27,8 @@ const accounts = [
   {"name":"useraaaaaaaf", "privateKey":"5KaqYiQzKsXXXxVvrG8Q3ECZdQAj2hNcvCgGEubRvvq7CU3LySK", "publicKey":"EOS5btzHW33f9zbhkwjJTYsoyRzXUNstx1Da9X2nTzk8BQztxoP3H"},
   {"name":"useraaaaaaag", "privateKey":"5KFyaxQW8L6uXFB6wSgC44EsAbzC7ideyhhQ68tiYfdKQp69xKo", "publicKey":"EOS8Du668rSVDE3KkmhwKkmAyxdBd73B51FKE7SjkKe5YERBULMrw"}
 ];
+
+
 
 // set up styling classes using material-ui "withStyles"
 const styles = theme => ({
@@ -43,17 +49,127 @@ const styles = theme => ({
     padding: 10,
     marginBottom: 0.
   },
+  header: {
+    height: '100px',
+    textAlign: 'center',
+    borderBottom: '2px solid midnightblue',
+    marginBottom: '10px',
+    backgroundColor: 'aliceblue',
+  },
+  logo: {
+    height: '100px',
+  },
+  video: {
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  screenContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  screen: {
+    width: '360px',
+    height: '640px',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  screenImg: {
+    width: '100%',
+  },
+  notification: {
+    position: 'absolute',
+    top: '590px',
+    transition: 'top 1s',
+  },
+  visibleNotification: {
+    top: '410px',
+  },
+  notificationArc: {
+    backgroundColor: '#91E2E1',
+    width: '360px',
+    height: '50px',
+    borderRadius: '70% / 100%',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  notificationSquare: {
+    backgroundColor: '#91E2E1',
+    width: '320px',
+    height: '200px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '0 20px',
+  },
+  cupClickHandler: {
+    width: '50px',
+    height: '50px',
+    borderRadius: '25px',
+    position: 'absolute',
+    top: '58px',
+    right: '25px',
+    cursor: 'pointer',
+  },
+  yourCof: {
+    width: '150px',
+    color: '#19A7AC',
+    position: 'absolute',
+    top: '227px',
+    font: '18px Arial',
+    textAlign: 'center',
+    right: '99px',
+  },
+  yourCompCof: {
+    top: '358px',
+    font: '12px Arial',
+    width: '150px',
+    right: '69px',
+    position: 'absolute',
+    textAlign: 'left',
+    color: 'white',
+  },
+  coin: {
+    width: '70px',
+    height: '70px',
+  },
+  congrats: {
+    font: '18px Arial',
+    color: 'black',
+  },
+  newBalance: {
+    font: '14px Arial',
+    color: 'black',
+  }
 });
 
+const cafePrivateKey = '5JD9AGTuTeD5BXZwGQ5AtwBqHK21aHmYnTetHgk1B3pjj7krT8N';
+
 // Index component
+
 class Index extends Component {
 
   constructor(props) {
     super(props)
     this.state = {
-      noteTable: [] // to store the table rows from smart contract
+      noteTable: [],
+      view: 'camera', // to store the table rows from smart contract
+      visibleNotification: false,
     };
     this.handleFormEvent = this.handleFormEvent.bind(this);
+    this.startCamera = this.startCamera.bind(this);
+    this.gotoGraphs = this.gotoGraphs.bind(this);
+  }
+
+  componentDidMount() {
+    const eos = Eos();
+    eos.getCurrencyBalance('eosio.tokenz', 'useraaaaaaaa', 'COF').then(([res]) => {
+      const [amountStr, currency] = res.split(' ');
+      const amount = parseFloat(amountStr);
+      this.setState({
+        useraaaaaaaa: amount,
+      });
+    });
+    this.startCamera();
   }
 
   // generic function to handle form events (e.g. "submit" / "reset")
@@ -87,110 +203,147 @@ class Index extends Component {
     // eosjs function call: connect to the blockchain
     const eos = Eos({keyProvider: privateKey});
     const result = await eos.transaction({
-      actions: [{
-        account: "notechainacc",
-        name: actionName,
-        authorization: [{
-          actor: account,
-          permission: 'active',
-        }],
-        data: actionData,
-      }],
+      actions: [
+        {
+          account: "notechainac",
+          name: actionName,
+          authorization: [{
+            actor: account,
+            permission: 'active',
+          }],
+          data: actionData,
+        },
+        {
+          account: "notechainac",
+          name: "like",
+          authorization: [{
+            actor: account,
+            permission: 'active',
+          }],
+          data: {
+            _noteId: 0,
+          },
+        }
+      ],
     });
 
     console.log(result);
     this.getTable();
   }
 
-  // gets table data from the blockchain
-  // and saves it into the component state: "noteTable"
-  getTable() {
-    const eos = Eos();
-    eos.getTableRows({
-      "json": true,
-      "code": "notechainacc",   // contract who owns the table
-      "scope": "notechainacc",  // scope of the table
-      "table": "notestruct",    // name of the table as specified by the contract abi
-      "limit": 100,
-    }).then(result => this.setState({ noteTable: result.rows }));
+  startCamera() {
+    let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+    const self = this;
+    scanner.addListener('scan', function (content) {
+      const eos = Eos({ keyProvider: cafePrivateKey });
+      console.log('transacting...');
+      eos.transaction({
+        actions: [
+          {
+            account: "eosio.tokenz",
+            name: 'transfer',
+            authorization: [{
+              actor: "cafe",
+              permission: "active",
+            }],
+            data: {
+              from: 'cafe',
+              to: content,
+              quantity: '1.0000 COF',
+              memo: 'for keeps!',              
+            },
+          }
+        ]
+      });
+      self.setState({
+        view: 'account',
+      });
+      setTimeout(() => {
+        const eos = Eos();
+        eos.getCurrencyBalance('eosio.tokenz', 'useraaaaaaaa', 'COF').then(([res]) => {
+          const [amountStr, currency] = res.split(' ');
+          const amount = parseFloat(amountStr);
+          self.setState({
+            useraaaaaaaa: amount,
+            visibleNotification: true,
+          });
+          setTimeout(() => {
+            self.setState({
+              visibleNotification: false,
+            });
+          }, 3500);
+        });
+      }, 1000);
+      scanner.stop()
+    });
+    Instascan.Camera.getCameras().then(function (cameras) {
+      if (cameras.length > 0) {
+        console.log(cameras);
+        scanner.start(cameras[0]);
+      } else {
+        console.error('No cameras found.');
+      }
+    }).catch(function (e) {
+      console.error(e);
+    });
   }
 
-  componentDidMount() {
-    this.getTable();
+  gotoGraphs() {
+    this.setState({
+      view: 'graphs',
+    });
   }
 
   render() {
-    const { noteTable } = this.state;
+    const { view, useraaaaaaaa, visibleNotification } = this.state;
     const { classes } = this.props;
-
-    // generate each note as a card
-    const generateCard = (key, timestamp, user, note) => (
-      <Card className={classes.card} key={key}>
-        <CardContent>
-          <Typography variant="headline" component="h2">
-            {user}
-          </Typography>
-          <Typography style={{fontSize:12}} color="textSecondary" gutterBottom>
-            {new Date(timestamp*1000).toString()}
-          </Typography>
-          <Typography component="pre">
-            {note}
-          </Typography>
-        </CardContent>
-      </Card>
-    );
-    let noteCards = noteTable.map((row, i) =>
-      generateCard(i, row.timestamp, row.user, row.note));
+    let notificationClasses = classes.notification;
+    if (visibleNotification) {
+      notificationClasses += ` ${classes.visibleNotification}`;
+    }
 
     return (
       <div>
-        <AppBar position="static" color="default">
-          <Toolbar>
-            <Typography variant="title" color="inherit">
-              Note Chain
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        {noteCards}
-        <Paper className={classes.paper}>
-          <form onSubmit={this.handleFormEvent}>
-            <TextField
-              name="account"
-              autoComplete="off"
-              label="Account"
-              margin="normal"
-              fullWidth
-            />
-            <TextField
-              name="privateKey"
-              autoComplete="off"
-              label="Private key"
-              margin="normal"
-              fullWidth
-            />
-            <TextField
-              name="note"
-              autoComplete="off"
-              label="Note (Optional)"
-              margin="normal"
-              multiline
-              rows="10"
-              fullWidth
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.formButton}
-              type="submit">
-              Add / Update note
-            </Button>
-          </form>
-        </Paper>
-        <pre className={classes.pre}>
-          Below is a list of pre-created accounts information for add/update note:
-          <br/><br/>
-          accounts = { JSON.stringify(accounts, null, 2) }
-        </pre>
+        { view === 'camera' &&
+          <div>
+            <div className={classes.header}>
+              <img onClick={this.startCamera} className={classes.logo} src={logo} />
+            </div>
+            <div className={classes.video}>
+              <video id="preview" />
+            </div>
+          </div>
+      }
+        {/* { view === 'account' &&  */}
+          <div style={{ display: view === 'account' ? 'flex' : 'none'}} className={classes.screenContainer}>
+            <div className={classes.screen}>
+              <img className={classes.screenImg} src={page1} />
+              <div onClick={this.gotoGraphs} className={classes.cupClickHandler} />
+              <div className={classes.yourCompCof}>{useraaaaaaaa} COF</div>
+              <div className={classes.yourCof}>{useraaaaaaaa} COF</div>
+              <div className={notificationClasses}>
+                <div className={classes.notificationArc} />
+                <div className={classes.notificationSquare}>
+                  <img className={classes.coin} src={coin} />
+                  <p className={classes.congrats}>
+                    Congrats, you’ve earned a COF token!
+                  </p>
+                  <p className={classes.newBalance}>
+                    You now have {useraaaaaaaa} COF tokens!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        {/* } */}
+        {/* { */}
+          {/* view === 'graphs' && */}
+        <div style={{ display: view === 'graphs' ? 'flex' : 'none' }} className={classes.screenContainer}>
+            <div className={classes.screen}>
+              <img className={classes.screenImg} src={page2} />
+            </div>
+          </div>
+        {/* } */}
       </div>
     );
   }

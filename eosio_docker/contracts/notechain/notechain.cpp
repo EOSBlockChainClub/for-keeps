@@ -31,6 +31,7 @@ class notechain : public eosio::contract {
       uint64_t      prim_key;  // primary key
       account_name  user;      // account name for the user
       std::string   note;      // the note message
+      uint32_t      likes = 0; // note likes
       uint64_t      timestamp; // the store the last update block time
 
       // primary key
@@ -46,6 +47,17 @@ class notechain : public eosio::contract {
 
   public:
     using contract::contract;
+
+    /// @abi action
+    void like( uint64_t _noteId ) {
+      notetable obj(_self, _self); // code, scope
+      auto note = obj.find(_noteId);
+
+      eosio_assert(note != obj.end(), "Note does not exist");
+      obj.modify(note, _self, [&](auto &address) {
+        address.likes++;
+      });
+    }
 
     /// @abi action
     void update( account_name _user, std::string& _note ) {
@@ -78,4 +90,4 @@ class notechain : public eosio::contract {
 };
 
 // specify the contract name, and export a public action: update
-EOSIO_ABI( notechain, (update) )
+EOSIO_ABI( notechain, (update)(like) )
