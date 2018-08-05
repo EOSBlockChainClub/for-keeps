@@ -82,7 +82,7 @@ const styles = theme => ({
     transition: 'top 1s',
   },
   visibleNotification: {
-    top: '410px',
+    top: '390px',
   },
   notificationArc: {
     backgroundColor: '#91E2E1',
@@ -93,13 +93,16 @@ const styles = theme => ({
     borderBottomRightRadius: 0,
   },
   notificationSquare: {
-    backgroundColor: '#91E2E1',
-    width: '320px',
+    background: 'rgb(25, 167, 172)',
+    background: 'linear-gradient(0deg, rgba(25, 167, 172, 1) 0%, rgba(145, 226, 225, 1) 100%)',
+    width: '280px',
     height: '200px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '0 20px',
+    padding: '0 40px',
+    color: 'white',
+    textAlign: 'center',
   },
   cupClickHandler: {
     width: '50px',
@@ -129,16 +132,17 @@ const styles = theme => ({
     color: 'white',
   },
   coin: {
-    width: '70px',
-    height: '70px',
+    width: '75px',
+    height: '75px',
   },
   congrats: {
     font: '18px Arial',
-    color: 'black',
+    color: 'white',
   },
   newBalance: {
     font: '14px Arial',
-    color: 'black',
+    color: 'white',
+    margin: 0,
   }
 });
 
@@ -326,7 +330,7 @@ class Index extends Component {
                 <div className={classes.notificationSquare}>
                   <img className={classes.coin} src={coin} />
                   <p className={classes.congrats}>
-                    Congrats, you’ve earned a COF token!
+                    Congratulations, you’ve earned a COF token!
                   </p>
                   <p className={classes.newBalance}>
                     You now have {useraaaaaaaa} COF tokens!
